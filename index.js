@@ -2,6 +2,7 @@ import express from 'express';
 import dotenv from 'dotenv';
 import axios from 'axios';
 import Redis from 'ioredis';
+import rateLimit from 'express-rate-limit';
 
 dotenv.config();
 
@@ -26,6 +27,18 @@ const getWeatherData = async (city) => {
     }
 };
 
+const limiter = rateLimit({
+    windowMs: 60 * 60 * 1000, // 1 hour
+    max: 100, // 100 requests per hour per IP
+    message: {
+        error: 'Too many requests, please try again later.',
+        message: 'You have exceeded the 100 requests per hour limit.'
+    },
+    headers: true,
+});
+
+// Applies rate limiter to all routes under /api
+app.use('/api', limiter);
 
 app.get('/', async (req, res) => {
     res.send('Hello World');
